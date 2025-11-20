@@ -1,0 +1,133 @@
+version: "3.9"
+
+# =========================
+# Networks
+# =========================
+networks:
+  aios_net:
+    driver: bridge
+
+# =========================
+# Volumes
+# =========================
+volumes:
+  postgres_data:   # Persistent storage for PostgreSQL
+  redis_data:      # Persistent storage for Redis (optional, for AOF/RDB)
+
+# =========================
+# Services
+# =========================
+services:
+
+  # -------------------------
+  # FastAPI Application
+  # -------------------------
+  app:
+    image: python:3.11-slim
+    container_name: aios_app
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn main:app --host 0.0.0.0 --port 8080 --workers 4"
+    volumes:
+      - ./:/app
+    environment:
+      AIOS_ENVIRONMENT: production
+      AIOS_DEBUG: "false"
+      AIOS_JWT_SECRET: "supersecretjwt"
+      AIOS_JWT_ALGORITHM: "HS256"
+      AIOS_CORS_ORIGINS: "*"
+      AIOS_REQUEST_TIMEOUT_MS: 80
+      DATABASE_URL: postgres://aios_user:aios_pass@postgres:5432/aios_db
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - aios_net
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # -------------------------
+  # Redis (Caching / Broker)
+  # -------------------------
+  redis:
+    image: redis:7.2-alpine
+    container_name: aios_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - aios_net
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # -------------------------
+  # PostgreSQL (Persistent DB)
+  # -------------------------
+  postgres:
+    image: postgres:16.2-alpine
+    container_name: aios_postgres
+    environment:
+      POSTGRES_USER: aios_user
+      POSTGRES_PASSWORD: aios_pass
+      POSTGRES_DB: aios_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aios_net
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aios_user -d aios_db"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
