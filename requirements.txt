@@ -1,0 +1,65 @@
+# =========================
+# Core Web Framework
+# =========================
+fastapi>=0.115.0          # High-performance async web framework
+uvicorn[standard]>=0.30.0 # ASGI server with performance extras (uvloop, httptools, websockets)
+
+# =========================
+# Data Validation & Config
+# =========================
+pydantic>=2.9.0           # Data validation and settings management
+python-dotenv>=1.0.1      # Environment variable loading for configuration
+
+# =========================
+# Security / Authentication
+# =========================
+PyJWT>=2.9.0              # JWT authentication and token handling
+
+# =========================
+# Metrics & Monitoring
+# =========================
+prometheus-client>=0.20.0 # Prometheus metrics exporter
+
+# =========================
+# Caching / Message Broker
+# =========================
+redis>=5.0.1              # Redis client for caching and broker support
+
+# =========================
+# Database Clients
+# =========================
+asyncpg>=0.29.0           # Async PostgreSQL driver
+
+# =========================
+# Vector Database / Embeddings
+# =========================
+chromadb>=0.5.0           # Vector database for embeddings and retrieval
+faiss-cpu>=1.8.0          # Alternative vector search library (CPU build)
+
+# =========================
+# Task Queue / Background Jobs
+# =========================
+celery>=5.4.0             # Distributed task queue
+
+# =========================
+# HTTP Client
+# =========================
+httpx>=0.27.0             # Async HTTP client for external API calls
+
+# =========================
+# Logging & Observability
+# =========================
+structlog>=24.1.0         # Structured logging for production observability
+loguru>=0.7.2             # Modern logging library with rich features
+
+# =========================
+# Testing Framework
+# =========================
+pytest>=8.3.0             # Core testing framework
+pytest-asyncio>=0.23.0    # Async test support for pytest
+
+# =========================
+# Optional Utilities
+# =========================
+aioredis>=2.0.1           # Async Redis client (alternative to redis-py)
+psycopg[binary]>=3.2.0    # Optional PostgreSQL driver (sync fallback)
